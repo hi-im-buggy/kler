@@ -6,6 +6,7 @@
 
 flag_t flag;
 tape_t tape;
+win_grp_t win;
 
 int main(int argc, char * const argv[])
 {
@@ -52,6 +53,17 @@ int main(int argc, char * const argv[])
 	tape.start = (cell_t *) calloc(tape.size, sizeof(cell_t));
 	tape.tc = tape.start;
 
+	// Initialize things if in ncurses mode
+	if (flag.ncurses) {
+		initscr();
+		cbreak();
+		noecho();
+		curs_set(0);
+
+		win.inst = newwin(5, 40, 0, 0);
+		win.tape = newwin(30, 40, 7, 0);
+	}
+
 	int retval = 0;
 	retval = execFile(instream);
 
@@ -64,5 +76,8 @@ int main(int argc, char * const argv[])
 			break;
 	}
 
+	if (flag.ncurses) {
+		endwin();
+	}
 	return 0;
 }

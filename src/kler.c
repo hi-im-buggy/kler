@@ -2,28 +2,69 @@
 
 /* NCURSES FUNCTIONS */
 
-void updateTape()
+/* update the visual represent of the tape */
+void updateTape() //{{{
 {
-}
+	int height, width;
+	getmaxyx(win.tape, height, width);
+	const int cur_cell = TAPE_POS;
+	int cur;
+
+	int y = PADDING + 1;
+	int x = PADDING + 1;
+
+	werase(win.tape);
+	/* decide the starting cell such that we print the cur cell as well as
+	 * nearby tape cells */
+	if (cur_cell > height - 2 * PADDING)
+		cur = cur_cell - (height - 2 * PADDING);
+	else
+		cur = 0;
+
+	/* print the tape cells, highlighting cur cell */
+	while (y < height - PADDING && cur < tape.size) {
+		if (cur == cur_cell) {
+			wattron(win.tape, A_STANDOUT);
+			mvwprintw(win.tape, y++, x, "> #%u: %u", cur, tape.start[cur]);
+			cur++;
+			wattroff(win.tape, A_STANDOUT);
+		}
+		else {
+			mvwprintw(win.tape, y++, x, "#%u: %u", cur, tape.start[cur]);
+			cur++;
+		}
+	}
+} //}}}
 
 /* print the string containing instructions to the inst window */
-void updateInstructions(WINDOW *inst_win, char *inst_str, int cur) //{{{
+void updateInstructions(char *inst_str, const int cur_inst) //{{{
 {
 	int height, width;	
-	getmaxyx(inst_win, height, width);
+	getmaxyx(win.inst, height, width);
 	int length = strlen(inst_str);
+	int cur = cur_inst;
 
 	int y = height / 2;
 	int x = width / 2;
 
-	wattron(inst_win, A_BOLD);
-	mvwaddchar(inst_win, y, x, inst_str[cur]);
-	wattron(inst_win, A_BOLD);
+	werase(win.inst);
+	// Print cur_inst
+	wattron(win.inst, A_STANDOUT);
+	mvwaddch(win.inst, y, x, inst_str[cur]);
+	wattron(win.inst, A_STANDOUT);
 
-	cur--;
+	// Print the chars before cur_inst
 	do {
-		cur--;
-	} while (x > INST_PADDING && cur >= 0);
+		mvwaddch(win.inst, y, --x, inst_str[--cur]);
+	} while (x > PADDING && cur > 0);
+
+	cur = cur_inst + 1;
+	x = (width / 2) + 1;
+
+	// Print the chars after cur_inst
+	do {
+		mvwaddch(win.inst, y, x++, inst_str[cur++]);
+	} while (x < width - PADDING && cur < length);
 } //}}}
 
 /* BF EXECUTION FUNCTIONS */
@@ -68,10 +109,27 @@ int execFile(FILE *in_file) //{{{
 	 * loocking for the matching bracket, not executing the code if we entered
 	 * it with a zero on the cell */
 
+	char inst_str[COLS];
+	int cur_inst = -1;
+
 	char inp;
 	while ( (inp = fgetc(in_file)) != EOF) {
 		/* FIXME nested loops still don't work?
 		 * or something else maybe, but hello world don't work*/
+
+		/* if in ncurses mode, we also have to display the things */
+		if (flag.ncurses) {
+			/* Push it to the string if it is a valid bf instruction */
+			switch (inp) { 
+				case '[': case ']': case '<': case '>': case '+': case '-': case '.': case ',':
+					inst_str[++cur_inst] = inp;
+					break;
+			}
+
+			updateInstructions(inst_str, cur_inst);
+			wrefresh(win.inst);
+		}
+
 		switch (inp) {
 			/* Store the file position on encountering a 
 			 * loop onto the stack */
@@ -102,8 +160,16 @@ int execFile(FILE *in_file) //{{{
 				break;
 		}
 
+		if (flag.ncurses) {
+			updateTape();
+			wrefresh(win.tape);
+			refresh();
+		}
 		if (loop_depth > MAX_LOOP_DEPTH)
 			return ERROR_LOOP_DEPTH_EXCEEDED;
+
+		usleep(DELAY);
+		refresh();
 	}
 	
 	if (loop_depth)

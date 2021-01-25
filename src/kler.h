@@ -1,16 +1,20 @@
 #ifndef KLER_H
 #define KLER_H
 
-#include <ncurses.h>
+#include <curses.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include <unistd.h>
+#include <time.h>
 
 #define INIT_TAPE_SIZE 1024
 #define MAX_LOOP_DEPTH 64
 #define BF_LINE_SIZE 1024
-#define DELAY 1
-#define INST_PADDING 2
+#define DELAY 100000
+#define PADDING 2
+
+#define TAPE_POS (tape.tc - tape.start)
 
 enum {
 	NO_ERROR,
@@ -27,6 +31,13 @@ typedef struct {
 extern flag_t flag;
 
 typedef struct {
+	WINDOW *tape;
+	WINDOW *inst;
+	WINDOW *io;
+} win_grp_t;
+extern win_grp_t win;
+
+typedef struct {
 	cell_t *start;	
 	cell_t *tc;
 	size_t size;
@@ -39,6 +50,9 @@ typedef struct {
 } loop_t;
 
 /* NCURSES FUNCTIONS */
+void updateTape();
+void updateInstructions(char *, const int);
+
 /* BF EXECUTION FUNCTIONS */
 void execChar(const char);
 int execFile(FILE *);
