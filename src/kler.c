@@ -177,9 +177,40 @@ int execFile(FILE *in_file) //{{{
 			wrefresh(win.inst);
 		}
 
-		// TODO: write loop logic here
+		/* Loop logic is handled here, and if the character is not a loop char
+		 * it gets sent to execChar() to be dealt with */
 		switch(inst_str[i]) {
+			case '[':
+				/* push the index to stack */
+				loop_stack[loop_depth] = i;
+				/* and go into no_exec mode if cur tape cell is 0 */
+				if (*tape.tc == 0 && exec) {
+					no_exec_loop_depth = loop_depth;
+					exec = false;
+				}
+				loop_depth++;
+				break;
+			case ']':
+				--loop_depth;
+				/* pop the top index of the stack if in exec_mode. The -1 is to
+				 * counteract the increment after the switch statement so we
+				 * run an entry check at the '[' for the cur cell */
+				if (exec) {
+					i = loop_stack[loop_depth] - 1;
+				}
+				/* if we are at the same depth where we started a no_exec
+				 * loop then we go back to exec mode */
+				else if (loop_depth == no_exec_loop_depth) {
+					exec = true;
+				}
+				break;
+			default:
+				if (exec)
+					execChar(inst_str[i]);
+				break;
 		}
+
+		i++; // increment after switching case
 
 		if (flag.ncurses) {
 			updateTape();
