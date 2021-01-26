@@ -7,6 +7,7 @@
 flag_t flag;
 tape_t tape;
 win_grp_t win;
+int delay = DELAY;
 
 int main(int argc, char * const argv[])
 {
@@ -62,6 +63,11 @@ int main(int argc, char * const argv[])
 
 		win.inst = newwin(5, 40, 0, 0);
 		win.tape = newwin(30, 40, 7, 0);
+
+		box(win.inst, 0, 0);
+		box(win.tape, 0, 0);
+		wrefresh(win.inst);
+		wrefresh(win.tape);
 	}
 
 	int retval = 0;

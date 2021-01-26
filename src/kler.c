@@ -1,6 +1,8 @@
 #include "kler.h"
 
-/* NCURSES FUNCTIONS */
+/*********************
+ * NCURSES FUNCTIONS *
+ *********************/
 
 /* update the visual represent of the tape */
 void updateTape() //{{{
@@ -48,10 +50,11 @@ void updateInstructions(char *inst_str, const int cur_inst) //{{{
 	int x = width / 2;
 
 	werase(win.inst);
+
 	// Print cur_inst
 	wattron(win.inst, A_STANDOUT);
 	mvwaddch(win.inst, y, x, inst_str[cur]);
-	wattron(win.inst, A_STANDOUT);
+	wattroff(win.inst, A_STANDOUT);
 
 	// Print the chars before cur_inst
 	do {
@@ -62,12 +65,67 @@ void updateInstructions(char *inst_str, const int cur_inst) //{{{
 	x = (width / 2) + 1;
 
 	// Print the chars after cur_inst
-	do {
+	while (x < width - PADDING && cur < length)
 		mvwaddch(win.inst, y, x++, inst_str[cur++]);
-	} while (x < width - PADDING && cur < length);
+
 } //}}}
 
-/* BF EXECUTION FUNCTIONS */
+/**************************
+ * BF EXECUTION FUNCTIONS *
+ **************************/
+
+/* Take a file stream and return a null-terminated char string containing only
+ * the valid BF characters */
+char * onlyCode(char *in_string) //{{{
+{
+	size_t buf_size = BF_BUF_INIT;
+	char *string = (char *) calloc(buf_size, sizeof(char));
+	char ch;
+	int i = 0;
+
+	while ((ch = in_string[i]) != '\0') {
+		switch(ch) {
+			default:
+				break;
+			case '[': case ']': case '<': case '>': case '+': case '-': case '.': case ',':
+				string[i++] = ch;
+				break;
+		}
+
+		if (i >= buf_size) {
+			buf_size *= 2;
+			string = realloc(string, buf_size * sizeof(char));
+		}
+	}
+
+	string[i] = '\0';
+
+	return string;
+} //}}}
+
+/* Open a filestream, turn it into a string and then call onlyCode() */
+char * onlyCodeF(FILE *instream) //{{{
+{
+	size_t buf_size = BF_BUF_INIT;
+	char *string = (char *) calloc(buf_size, sizeof(char));
+	char ch;
+	int i = 0;
+	
+	while (( ch = fgetc(instream)) != EOF) {
+		string[i++] = ch;
+		if (i >= buf_size) {
+			buf_size *= 2;
+			string = realloc(string, buf_size * sizeof(char));
+		}
+	}
+
+	string[i] = '\0';	
+	char * remove_old = string;
+	string = onlyCode(string);
+	free(remove_old);
+
+	return string;
+} //}}}
 
 /* Execute a _single_ character on the tape
  * (loops excluded) */
@@ -109,55 +167,18 @@ int execFile(FILE *in_file) //{{{
 	 * loocking for the matching bracket, not executing the code if we entered
 	 * it with a zero on the cell */
 
-	char inst_str[COLS];
-	int cur_inst = -1;
+	/* Strip the code to only BF characters first */
+	char *inst_str = onlyCodeF(in_file);
+	int i = 0;
 
-	char inp;
-	while ( (inp = fgetc(in_file)) != EOF) {
-		/* FIXME nested loops still don't work?
-		 * or something else maybe, but hello world don't work*/
-
-		/* if in ncurses mode, we also have to display the things */
+	while (inst_str[i] != '\0') {
 		if (flag.ncurses) {
-			/* Push it to the string if it is a valid bf instruction */
-			switch (inp) { 
-				case '[': case ']': case '<': case '>': case '+': case '-': case '.': case ',':
-					inst_str[++cur_inst] = inp;
-					break;
-			}
-
-			updateInstructions(inst_str, cur_inst);
+			updateInstructions(inst_str, i);
 			wrefresh(win.inst);
 		}
 
-		switch (inp) {
-			/* Store the file position on encountering a 
-			 * loop onto the stack */
-			case '[':
-				loop_stack[loop_depth] = ftell(in_file);
-				/* If we are at a 0 cell, then we move forward to 
-				 * the matching bracket without executing */
-				if (*tape.tc == 0 && exec) {
-					no_exec_loop_depth = loop_depth;
-					exec = false;
-				}
-				loop_depth++;
-				break;
-			case ']':
-				--loop_depth;
-				/* If we are in exec mode, jump back to the matching bracket 
-				 *  the -1 is to account for the extra fgetc() that will occur */
-				if (exec)
-					fseek(in_file, loop_stack[loop_depth] - 1, SEEK_SET);
-				/* If we found the matching bracket for the loop which
-				 * we were not supposed to exec */
-				else if (loop_depth == no_exec_loop_depth)
-					exec = true;
-				break;
-			default:
-				if (exec)
-					execChar(inp);
-				break;
+		// TODO: write loop logic here
+		switch(inst_str[i]) {
 		}
 
 		if (flag.ncurses) {
@@ -165,13 +186,14 @@ int execFile(FILE *in_file) //{{{
 			wrefresh(win.tape);
 			refresh();
 		}
+
 		if (loop_depth > MAX_LOOP_DEPTH)
 			return ERROR_LOOP_DEPTH_EXCEEDED;
 
-		usleep(DELAY);
+		usleep(delay);
 		refresh();
 	}
-	
+
 	if (loop_depth)
 		return ERROR_UNMATCHED_BRACES;
 
@@ -179,18 +201,6 @@ int execFile(FILE *in_file) //{{{
 } //}}}
 
 /* input function to be called by execChar() */
-cell_t getInput() //{{{
-{
-	cell_t inp;
-	if (flag.ncurses) {
-		inp = getch();
-	}
-	else {
-		inp = getchar();
-	}
-
-	return inp;
-} //}}}
 
 /* output function to be called by execChar() */
 void putOutput(cell_t out) //{{{

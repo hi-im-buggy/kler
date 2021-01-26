@@ -10,7 +10,7 @@
 
 #define INIT_TAPE_SIZE 1024
 #define MAX_LOOP_DEPTH 64
-#define BF_LINE_SIZE 1024
+#define BF_BUF_INIT 1024
 #define DELAY 100000
 #define PADDING 2
 
@@ -48,6 +48,8 @@ typedef struct {
 	cell_t *start;
 	cell_t *end;
 } loop_t;
+
+extern int delay;
 
 /* NCURSES FUNCTIONS */
 void updateTape();
