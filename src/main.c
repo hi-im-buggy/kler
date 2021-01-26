@@ -52,7 +52,7 @@ int main(int argc, char * const argv[])
 	// Set up the tape before we continue and initialize it
 	tape.size = INIT_TAPE_SIZE;
 	tape.start = (cell_t *) calloc(tape.size, sizeof(cell_t));
-	tape.tc = tape.start;
+	tape.tc = (cell_t *) tape.start;
 
 	// Initialize things if in ncurses mode
 	if (flag.ncurses) {

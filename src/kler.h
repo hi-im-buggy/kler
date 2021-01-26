@@ -22,7 +22,7 @@ enum {
 	ERROR_LOOP_DEPTH_EXCEEDED
 };
 
-typedef char cell_t;
+typedef unsigned char cell_t;
 
 typedef struct {
 	bool ncurses;
