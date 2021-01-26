@@ -41,7 +41,7 @@ void updateTape() //{{{
 /* print the string containing instructions to the inst window */
 void updateInstructions(char *inst_str, const int cur_inst) //{{{
 {
-	int height, width;	
+	int height, width;
 	getmaxyx(win.inst, height, width);
 	int length = strlen(inst_str);
 	int cur = cur_inst;
@@ -74,31 +74,31 @@ void updateInstructions(char *inst_str, const int cur_inst) //{{{
  * BF EXECUTION FUNCTIONS *
  **************************/
 
-/* Take a file stream and return a null-terminated char string containing only
+/* Take a null-terminated string and return a string containing only
  * the valid BF characters */
 char * onlyCode(char *in_string) //{{{
 {
 	size_t buf_size = BF_BUF_INIT;
 	char *string = (char *) calloc(buf_size, sizeof(char));
 	char ch;
-	int i = 0;
+	int i = 0, j = 0;
 
-	while ((ch = in_string[i]) != '\0') {
+	while ((ch = in_string[i++]) != '\0') {
 		switch(ch) {
 			default:
 				break;
 			case '[': case ']': case '<': case '>': case '+': case '-': case '.': case ',':
-				string[i++] = ch;
+				string[j++] = ch;
 				break;
 		}
 
 		if (i >= buf_size) {
 			buf_size *= 2;
-			string = realloc(string, buf_size * sizeof(char));
+			string = (char *) realloc(string, buf_size * sizeof(char));
 		}
 	}
 
-	string[i] = '\0';
+	string[j] = '\0';
 
 	return string;
 } //}}}
@@ -110,16 +110,16 @@ char * onlyCodeF(FILE *instream) //{{{
 	char *string = (char *) calloc(buf_size, sizeof(char));
 	char ch;
 	int i = 0;
-	
-	while (( ch = fgetc(instream)) != EOF) {
+
+	while ((ch = fgetc(instream)) != EOF) {
 		string[i++] = ch;
 		if (i >= buf_size) {
 			buf_size *= 2;
-			string = realloc(string, buf_size * sizeof(char));
+			string = (char *) realloc(string, buf_size * sizeof(char));
 		}
 	}
 
-	string[i] = '\0';	
+	string[i] = '\0';
 	char * remove_old = string;
 	string = onlyCode(string);
 	free(remove_old);
@@ -192,9 +192,10 @@ int execFile(FILE *in_file) //{{{
 				break;
 			case ']':
 				--loop_depth;
-				/* pop the top index of the stack if in exec_mode. The -1 is to
-				 * counteract the increment after the switch statement so we
-				 * run an entry check at the '[' for the cur cell */
+				/* pop the top index of the stack if in exec_mode, jumping to
+				 * the matching open bracket. The -1 is to counteract the
+				 * increment after the switch statement so we run an entry
+				 * check at the '[' for the cur cell */
 				if (exec) {
 					i = loop_stack[loop_depth] - 1;
 				}
@@ -210,20 +211,23 @@ int execFile(FILE *in_file) //{{{
 				break;
 		}
 
-		i++; // increment after switching case
+		/* increment after switch-case statement */
+		i++;
 
 		if (flag.ncurses) {
 			updateTape();
 			wrefresh(win.tape);
 			refresh();
+			usleep(delay);
 		}
 
 		if (loop_depth > MAX_LOOP_DEPTH)
 			return ERROR_LOOP_DEPTH_EXCEEDED;
 
-		usleep(delay);
 		refresh();
 	}
+
+	free(inst_str);
 
 	if (loop_depth)
 		return ERROR_UNMATCHED_BRACES;
@@ -232,6 +236,18 @@ int execFile(FILE *in_file) //{{{
 } //}}}
 
 /* input function to be called by execChar() */
+cell_t getInput() //{{{
+{
+	cell_t ch;
+	if (flag.ncurses) {
+		ch = wgetch(win.io);
+	}
+	else {
+		ch = getchar();
+	}
+
+	return ch;
+} //}}}
 
 /* output function to be called by execChar() */
 void putOutput(cell_t out) //{{{

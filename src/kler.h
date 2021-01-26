@@ -14,7 +14,7 @@
 #define DELAY 100000
 #define PADDING 2
 
-#define TAPE_POS (tape.tc - tape.start)
+#define TAPE_POS (unsigned int) (tape.tc - tape.start)
 
 enum {
 	NO_ERROR,

@@ -68,6 +68,7 @@ int main(int argc, char * const argv[])
 		box(win.tape, 0, 0);
 		wrefresh(win.inst);
 		wrefresh(win.tape);
+		refresh();
 	}
 
 	int retval = 0;
