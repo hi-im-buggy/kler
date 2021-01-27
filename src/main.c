@@ -61,13 +61,17 @@ int main(int argc, char * const argv[])
 		noecho();
 		curs_set(0);
 
-		win.inst = newwin(5, 80, 0, 0);
-		win.tape = newwin(30, 40, 7, 0);
-		win.io = newwin(30, 40, 7, 32);
+		int height, width;
+		getmaxyx(stdscr, height, width);
+		win.inst = newwin(INST_WIN_HEIGHT, width, 0, 0);
+		win.tape = newwin(height - INST_WIN_HEIGHT, width / 2, INST_WIN_HEIGHT, 0);
+		win.io = newwin(height - INST_WIN_HEIGHT, width / 2, INST_WIN_HEIGHT, width / 2);
 
+		/* The initialization for only win.io is also done here,
+		 * other wins are initd when called */
+		wmove(win.io, PADDING, PADDING);
 		box(win.io, 0, 0);
 		wrefresh(win.io);
-		box(stdscr, 0, 0);
 		refresh();
 	}
 

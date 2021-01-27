@@ -13,6 +13,8 @@
 #define BF_BUF_INIT 1024
 #define DELAY 10000
 #define PADDING 2
+#define INST_WIN_HEIGHT 5
+#define PROMPT ">>"
 
 #define TAPE_POS (unsigned int) (tape.tc - tape.start)
 

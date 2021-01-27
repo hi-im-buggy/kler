@@ -12,8 +12,8 @@ void updateTape() //{{{
 	const int cur_cell = TAPE_POS;
 	unsigned int cur, start;
 
-	int y = PADDING + 1;
-	int x = PADDING + 1;
+	int y = PADDING;
+	int x = PADDING;
 
 	werase(win.tape);
 	/* decide the starting cell such that we print the cur cell as well as
@@ -150,6 +150,7 @@ void execChar(const char inp) //{{{
 			tape.tc++;
 			break;
 		case '<':
+			/* TODO: add underflow error? */
 			if (tape.start < tape.tc)
 				tape.tc--;
 			break;
@@ -248,6 +249,10 @@ cell_t getInput() //{{{
 {
 	cell_t ch;
 	if (flag.ncurses) {
+		echo();
+		wprintw(win.io, "\n %s ", PROMPT);
+		box(win.io, 0, 0);
+		wrefresh(win.io);
 		ch = wgetch(win.io);
 		wrefresh(win.io);
 	}
@@ -263,8 +268,8 @@ void putOutput(cell_t out) //{{{
 {
 	if (flag.ncurses) {
 		waddch(win.io, out);
+		box(win.io, 0, 0);
 		wrefresh(win.io);
-		refresh();
 	}
 	else {
 		putchar(out);
