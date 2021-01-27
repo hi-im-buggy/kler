@@ -10,7 +10,7 @@ void updateTape() //{{{
 	int height, width;
 	getmaxyx(win.tape, height, width);
 	const int cur_cell = TAPE_POS;
-	int cur;
+	unsigned int cur, start;
 
 	int y = PADDING + 1;
 	int x = PADDING + 1;
@@ -19,10 +19,11 @@ void updateTape() //{{{
 	/* decide the starting cell such that we print the cur cell as well as
 	 * nearby tape cells */
 	if (cur_cell > height - 2 * PADDING)
-		cur = cur_cell - (height - 2 * PADDING);
+		start = cur_cell - (height / 2 - 2 * PADDING);
 	else
-		cur = 0;
+		start = 0;
 
+	cur = start;
 	/* print the tape cells, highlighting cur cell */
 	while (y < height - PADDING && cur < tape.size) {
 		if (cur == cur_cell) {
@@ -35,7 +36,12 @@ void updateTape() //{{{
 			mvwprintw(win.tape, y++, x, "#%u: %u", cur, tape.start[cur]);
 			cur++;
 		}
+	/* TODO bitmask and get only 1 char worth before printing tap cell,
+	 * otherwise might get wrong values because of endian-ness? */
 	}
+	
+	box(win.tape, 0, 0);
+	wrefresh(win.tape);
 } //}}}
 
 /* print the string containing instructions to the inst window */
@@ -68,6 +74,8 @@ void updateInstructions(char *inst_str, const int cur_inst) //{{{
 	while (x < width - PADDING && cur < length)
 		mvwaddch(win.inst, y, x++, inst_str[cur++]);
 
+	box(win.inst, 0, 0);
+	wrefresh(win.inst);
 } //}}}
 
 /**************************
@@ -241,6 +249,7 @@ cell_t getInput() //{{{
 	cell_t ch;
 	if (flag.ncurses) {
 		ch = wgetch(win.io);
+		wrefresh(win.io);
 	}
 	else {
 		ch = getchar();
@@ -253,7 +262,9 @@ cell_t getInput() //{{{
 void putOutput(cell_t out) //{{{
 {
 	if (flag.ncurses) {
-		addch(out);
+		waddch(win.io, out);
+		wrefresh(win.io);
+		refresh();
 	}
 	else {
 		putchar(out);

@@ -61,13 +61,13 @@ int main(int argc, char * const argv[])
 		noecho();
 		curs_set(0);
 
-		win.inst = newwin(5, 40, 0, 0);
+		win.inst = newwin(5, 80, 0, 0);
 		win.tape = newwin(30, 40, 7, 0);
+		win.io = newwin(30, 40, 7, 32);
 
-		box(win.inst, 0, 0);
-		box(win.tape, 0, 0);
-		wrefresh(win.inst);
-		wrefresh(win.tape);
+		box(win.io, 0, 0);
+		wrefresh(win.io);
+		box(stdscr, 0, 0);
 		refresh();
 	}
 
@@ -84,6 +84,8 @@ int main(int argc, char * const argv[])
 	}
 
 	if (flag.ncurses) {
+		sleep(2);
+		getch();
 		endwin();
 	}
 	return 0;
