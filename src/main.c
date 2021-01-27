@@ -19,7 +19,7 @@ int main(int argc, char * const argv[])
 
 	// Parse commandline args
 	int opt;
-	while ((opt = getopt(argc, argv, "hno:")) != -1) {
+	while ((opt = getopt(argc, argv, "hno:d:")) != -1) {
 		switch (opt) {
 			case 'n':
 				flag.ncurses = false;	
@@ -27,6 +27,9 @@ int main(int argc, char * const argv[])
 			case 'o':
 				flag.output_file = true;
 				out_file = optarg;
+				break;
+			case 'd':
+				delay = atoi(optarg);
 				break;
 			case 'h': default:
 				fprintf(stderr,
