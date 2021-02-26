@@ -12,6 +12,7 @@
 #define MAX_LOOP_DEPTH 64
 #define BF_BUF_INIT 1024
 #define DELAY 10000
+#define END_DELAY 2
 #define PADDING 2
 #define INST_WIN_HEIGHT 5
 #define PROMPT ">>"
@@ -59,7 +60,9 @@ void updateInstructions(char *, const int);
 
 /* BF EXECUTION FUNCTIONS */
 void execChar(const char);
+int execPrompt();
 int execFile(FILE *);
+int execString(char *);
 cell_t getInput();
 void putOutput(cell_t);
 

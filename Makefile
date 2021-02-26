@@ -1,4 +1,4 @@
-CC = g++
+CC = gcc
 CLIBS = -lncurses
 CFLAGS = -Wall
 BINARY = kler

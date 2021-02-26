@@ -39,7 +39,7 @@ void updateTape() //{{{
 	/* TODO bitmask and get only 1 char worth before printing tap cell,
 	 * otherwise might get wrong values because of endian-ness? */
 	}
-	
+
 	box(win.tape, 0, 0);
 	wrefresh(win.tape);
 } //}}}
@@ -164,9 +164,22 @@ void execChar(const char inp) //{{{
 }
 //}}}
 
+int execPrompt() //{{{
+{
+	/* 1. freeze the tape and instruction stack
+	 * 2. convert to file?
+	 * 3. call execFile(), prompt for more input if ERROR_UNMATCHED_BRACES */
+	return 0;
+}//}}}
+
+int execFile(FILE *in_file) {
+	/* Strip the code to only BF characters first */
+	char *inst_str = onlyCodeF(in_file);
+	return execString(inst_str);
+}
 /* executes a null-terminated instruction string.
  * handles loops itself, calls execChar() for the rest*/
-int execFile(FILE *in_file) //{{{
+int execString(char *inst_str) //{{{
 {
 	unsigned int loop_depth = 0, no_exec_loop_depth = 0;
 	int loop_stack[MAX_LOOP_DEPTH];
@@ -175,9 +188,6 @@ int execFile(FILE *in_file) //{{{
 	 * can skip back to them. exec is a flag so that inside a loop we are only
 	 * loocking for the matching bracket, not executing the code if we entered
 	 * it with a zero on the cell */
-
-	/* Strip the code to only BF characters first */
-	char *inst_str = onlyCodeF(in_file);
 	int i = 0;
 
 	while (inst_str[i] != '\0') {

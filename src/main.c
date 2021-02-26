@@ -1,4 +1,4 @@
-/* Kler is a visual brainfuck interpreter 
+/* Kler is a visual brainfuck interpreter
  * Author: Pratyaksh Gautam */
 
 #include "kler.h"
@@ -22,7 +22,7 @@ int main(int argc, char * const argv[])
 	while ((opt = getopt(argc, argv, "hno:d:")) != -1) {
 		switch (opt) {
 			case 'n':
-				flag.ncurses = false;	
+				flag.ncurses = false;
 				break;
 			case 'o':
 				flag.output_file = true;
@@ -37,6 +37,7 @@ int main(int argc, char * const argv[])
 						"Options:\n"
 						"-h : print this help text\n"
 						"-n : turn off ncurses mode\n"
+						"-d delay: set custom delay time in μs\n"
 						"-o outfile : output to file\n", argv[0]);
 				return 0;
 		}
@@ -91,7 +92,7 @@ int main(int argc, char * const argv[])
 	}
 
 	if (flag.ncurses) {
-		sleep(2);
+		sleep(END_DELAY);
 		getch();
 		endwin();
 	}
